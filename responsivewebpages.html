@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <title>hw8</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+      <link rel="stylesheet" href="css/style.css">
+       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+      <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+      <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+      <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script> 
+      <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+      <script
+         src="https://code.jquery.com/jquery-2.2.2.min.js"
+         integrity="sha256-36cp2Co+/62rEAAYHLmRCPIych47CvdM+uTBJwSzWjI="
+         crossorigin="anonymous"></script>
+      <script
+         src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"
+         integrity="sha256-xNjb53/rY+WmG+4L6tTl9m6PpqknWZvRt0rO1SRnJzw="
+         crossorigin="anonymous"></script>
+      <script src="https://code.highcharts.com/stock/highstock.js"></script>
+      <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+       <script src="http://connect.facebook.net/en_US/all.js"></script>
+ <script src="http://momentjs.com/downloads/moment.js"></script>
+       <script src="http://momentjs.com/downloads/moment-timezone.js"></script>
+       <style>
+           
+@media (min-width: 200px) and (max-width: 768px){
+	#divfavtable {
+       overflow-y: scroll;
+        height: 100%;
+        width: 100%;
+	}
+}
+           
+@media (min-width: 200px) and (max-width: 400px){
+	#favLabel {
+        font-size: 11px;
+	}
+}
+           
+@media (max-width: 400px){
+    #toggle-one{
+        height: 10px;
+    }
+    
+
+}
+@media all and (min-width: 960px) {
+  body{
+      font-size: 14px;
+  }
+}
+
+@media all and (max-width: 959px) and (min-width: 600px) {
+  body{
+      font-size: 14px;
+  }
+}
+
+@media all and (max-width: 599px) and (min-width: 320px) {
+  body{
+      font-size: 12px;
+  }
+           
+           
+       </style>
+      <script>
+          
+         var reload1;
+          function repopulate(){
+              var localStorageLen = localStorage.length;
+              console.log("hi " + localStorageLen);
+
+              if(localStorageLen > 0){
+                   var table = document.getElementById("favtable");
+                   console.log(localStorageLen);
+                  if(table!=null){
+                    var tableRows = table.getElementsByTagName('tr');
+                    var rowCount = tableRows.length;
+                    
+                  var count = 0;
+                   for(var key in localStorage){
+                       if(count>=localStorageLen){
+                           break;
+                       }
+                       console.log("here --now "+localStorage.getItem(key)+ " key : "+ key);
+                       var item = localStorage.getItem(key);
+                       //table repopulate
+                       $.ajax({
+                         url: "http://webservice2016-env.us-west-2.elasticbeanstalk.com/",
+                         type: "GET",			
+                         dataType: "json",
+                         data:{
+                             symbol : key
+                         },
+                         success: function(data){
+                             var k1 = data['Symbol'];
+                        firstUpdate = data['LastPrice'];
+                        secondUpdate = (data['Change']).toFixed(2) + "(" + (data['ChangePercent']).toFixed(2) + "%)";
+                             if((data['Change']).toFixed(2) > 0){
+                                         secondUpdate += "<img src='up.png'  id='img1'/>";
+                                     }
+                                     else{
+                                         secondUpdate += "<img src='down.png'  id='img1'/>";
+                                     }
+                             
+    
+                             
+                         storeArray = [k1,localStorage.getItem(k1).split(",")[1],data['LastPrice'],(data['Change']).toFixed(2) + "(" + (data['ChangePercent']).toFixed(2) + "%)",localStorage.getItem(k1).split(",")[4]];
+                        localStorage.removeItem(key);
+                        localStorage.setItem(k1,storeArray);
+                        //console.log("new store array "+storeArray);
+                var index = 0;
+
+                             $('#favtable tr').filter(function(){
+               if($('td', this).eq(0).text() == k1){
+                   console.log("row matched : " +index);
+                   table.rows[index].cells[2].innerHTML =firstUpdate;
+                    table.rows[index].cells[3].innerHTML =secondUpdate;
+               }
+                index++;
+            });
+                        count++;                       
+                    }
+                });
+              }
+          }
+          }
+          }
+          
+          function reloadFavtable(){
+                var bool1 = document.getElementById("toggle-one").checked ||document.getElementById("toggle-one1").checked ;
+            if(!bool1){
+                //console.log(bool1);
+                return;
+            }
+             else{
+                    repopulate();
+                    //console.log("jkshk");
+                    window.setTimeout(function(){reloadFavtable()}, 5000);
+             }
+         }
+          
+          function refreshOnOff() {
+           var bool = document.getElementById("toggle-one").checked || document.getElementById("toggle-one1").checked;
+           if(bool){
+               //refresh in 5 min;
+               //console.log("its true");
+               reloadFavtable();  
+           }
+         }
+          
+      </script>
+      <script>
+         var flag;
+         var storeArray;
+          var optionSelected;
+         $(function() {
+         $('#sub').on('submit',function(event){
+        event.preventDefault() ;
+        alert("Form Submission stoped.");
+    });
+
+
+         $("#usr")
+         .focus()
+         .autocomplete({
+         source: function(request,response) {
+         $.ajax({
+         url: "http://webservice2016-env.us-west-2.elasticbeanstalk.com/",
+             type:"GET",
+         dataType: "json",
+         data: {
+         autocompleteInput: $("#usr").val()
+         },
+          success: function(data) {
+              autocompleteData = data;
+             // console.log("data" + JSON.stringify(data));
+         if(data.length == 0){
+             optionSelected=0;
+         }
+         else{
+             optionSelected=1;
+         }
+         response($.map(data, function(item) {
+         return {
+         label: item.Symbol+" - "+item.Name + " (" +item.Exchange+ ")",
+         value: item.Symbol
+         }
+         }));
+         $("span.help-inline").hide();
+         },
+         
+         error: function () {
+                 response([]);
+             }
+         });
+         },
+         minLength: 1,
+         });
+         
+         });
+         function test() {
+             if (!optionSelected) { 
+             document.getElementById("error_1").innerHTML="Enter a valid entry";
+             document.getElementById("rightbtn").disabled = true;
+             document.getElementById("rightbtnsm").disabled = true;
+
+             }
+         else{
+             autocompleteData = [];
+             optionSelected = false;
+             document.getElementById("rightbtn").disabled = false;
+             document.getElementById("rightbtnsm").disabled = false;
+clearItem2();
+             getStock(document.getElementById('usr').value);
+        histocharts(document.getElementById('usr').value);
+        newsdata(document.getElementById('usr').value);
+        $(".item#it1").removeClass("active");
+        $(".item#it2").addClass("active");
+         }
+         }
+          
+          function printData(newsData){
+              if(newsData.responseData){
+                 // console.log("Len is : "+newsData.responseData.results.length);
+                  if(!newsData.responseData.results.length){
+                      document.getElementById("container2").innerHTML = "<p>No News Available</p>";  
+                  }
+                  else{
+            containerCount = newsData.responseData.results.length;
+              html_text="";
+              for(i=0;i<containerCount;i++){
+                  html_text += "<div class='cont2 img-rounded'><div><a target='_blank' href='"+newsData.responseData.results[i].unescapedUrl+"'>"+newsData.responseData.results[i].titleNoFormatting+"</a></div><p></p><div>"+newsData.responseData.results[i].content+"</div><br><div><label>Publisher:     "+" "+newsData.responseData.results[i].publisher+"</label></div><br><div><label>Date: "+" "+moment(newsData.responseData.results[i].publishedDate).format('DD MMM YYYY h:mm:ss')+"</label></div><br></div>";
+              }
+              document.getElementById("container2").innerHTML = html_text;                  
+              }
+              }
+          }
+          function getStock(val){
+              moment.tz.add('America/Los_Angeles|PST PDT|80 70|0101|1Lzm0 1zb0 Op0');
+
+         //console.log("get stock"+val);
+        $("#settings").removeClass("active");
+        $("#messages").removeClass("active");
+              $("#home").addClass("active");
+        $("#tab2").removeClass("active");
+        $("#tab3").removeClass("active");
+              $("#tab1").addClass("active");
+        $("#tab22").removeClass("active");
+        $("#tab33").removeClass("active");
+              $("#tab11").addClass("active");
+
+              $.ajax({
+         url: "http://webservice2016-env.us-west-2.elasticbeanstalk.com/",
+         type: "GET",			
+         dataType: "json",
+                         data:{
+                             symbol : val
+                         },
+                         success: function(data){
+                         //console.log(data);
+                             //table1 and call getYahooChart and set stockchart
+                             html_text = "";
+                                 if (data['Status'] == 'SUCCESS') {
+                             html_text= "<table id='t1' class='table table-striped'>";
+                html_text += "<tr><td style='font-weight:bold'>";
+                html_text += "Name</td><td>";     
+                html_text += data['Name'];     
+                html_text += "</td></tr>";
+                html_text += "<tr><td style='font-weight:bold'>";
+                html_text += "Symbol</td><td id='symid'>";     
+                html_text += data['Symbol'];     
+                html_text += "</td></tr>";
+                html_text += "<tr><td style='font-weight:bold'>";
+                html_text += "Last Price</td><td>$";     
+                html_text += data['LastPrice'];     
+                html_text += "</td></tr>";
+                html_text += "<tr><td style='font-weight:bold'>";
+                html_text += "Change(Change Percent)</td>";     
+                                     if((data['Change']).toFixed(2) > 0){
+                html_text += "<td style='color:green'>"+(data['Change']).toFixed(2) + "(" + (data['ChangePercent']).toFixed(2) + "%)" ;  
+    
+                                         html_text += "<img src='up.png' id='img1'/>";
+                                     }
+                                     else{
+             html_text += "<td style='color:red'>"+(data['Change']).toFixed(2) + "(" + (data['ChangePercent']).toFixed(2) + "%)" ;  
+    
+                                         html_text += "<img src='down.png' id='img1'/>";
+                                     }
+                html_text += "</td></tr>";
+                html_text += "<tr><td style='font-weight:bold'>";
+                html_text += "Time and Date</td><td>";     
+                html_text += moment.tz(data['Timestamp'],"America/Los_Angeles").format('DD MMMM, YYYY h:mm:ss a');
+                html_text += "</td></tr>";
+             html_text += "<tr><td style='font-weight:bold'>";
+                html_text += "Market Cap</td><td>";  
+         
+                    if(data['MarketCap']>=1000000000){
+                        data['MarketCap'] = (data['MarketCap'] / 1000000000).toFixed(2);
+                         html_text += data['MarketCap'] + " B";
+                                     MarketCap =data['MarketCap']+"B";
+
+                    }
+                    else if(data['MarketCap']>=1000000){
+         
+                        data['MarketCap'] = (data['MarketCap'] / 1000000).toFixed(2);
+                         html_text += data['MarketCap'] + " M";
+                                     MarketCap =data['MarketCap']+"M";
+
+                    }
+                                     else{
+                                         data['MarketCap'] = (data['MarketCap']).toFixed(2);
+                         html_text += data['MarketCap']; 
+                                                                              MarketCap =data['MarketCap']  ;
+
+                                     }
+                html_text += "</td></tr>"; 
+                                     html_text += "<tr><td style='font-weight:bold'>";
+                html_text += "Volume</td><td>";     
+                html_text += data['Volume'];     
+                html_text += "</td></tr>"; 
+                                     html_text += "<tr><td style='font-weight:bold'>";
+                html_text += "Change YTD(Change Percent YTD)</td>";     
+                
+                                      if((data['ChangeYTD']).toFixed(2) > 0){
+                html_text += "<td style='color:green'>"+(data['ChangeYTD']).toFixed(2) + "(" + (data['ChangePercentYTD']).toFixed(2) + "%)" ;   
+                                          html_text += "<img src='up.png'  id='img1'/>";
+                                     }
+                                     else{
+                                         html_text += "<td style='color:red'>"+(data['ChangeYTD']).toFixed(2) + "(" + (data['ChangePercentYTD']).toFixed(2) + "%)" ;   
+                                         html_text += "<img src='down.png' id='img1'/>";
+                                     }
+                html_text += "</td></tr>";
+                                      html_text += "<tr><td style='font-weight:bold'>";
+                html_text += "High Price</td><td>$";     
+                html_text += (data['High']).toFixed(2);   
+                html_text += "</td></tr>"; 
+                                     html_text += "<tr><td style='font-weight:bold'>";
+                html_text += "Low Price</td><td>$";     
+                html_text += (data['Low']).toFixed(2);     
+                html_text += "</td></tr>";
+                                     html_text += "<tr><td style='font-weight:bold'>";
+                html_text += "Opening Price</td><td>$";     
+                html_text += (data['Open']).toFixed(2);  
+                html_text += "</td></tr>";
+         
+         html_text += "</table>";
+                                     document.getElementById('table1').innerHTML = html_text;
+                                     if(localStorage.getItem(val) != null){
+                                          document.getElementById("star").innerHTML = "<span class='glyphicon glyphicon-star' style='color:yellow' width='100' height='180' onclick='changeImage()'></span>";
+         
+                                     }
+                                     else{
+                                          document.getElementById("star").innerHTML = '<span class="glyphicon glyphicon-star-empty" onclick="changeImage()" width="100" height="150"></span>';
+         
+                                     }
+                                     
+         
+                                     storeArray = [data['Symbol'],data['Name'],data['LastPrice'],(data['Change']).toFixed(2) + "(" + (data['ChangePercent']).toFixed(2) + "%)",MarketCap];
+
+         } else {
+         }
+                             //document.getElementById("table1").innerHTML = html_text;
+                             //console.log("Store arayy ========= "+ storeArray)
+                             getYahooChart(val);
+                     },
+                 error:function(err){
+                 }
+         
+         });
+         
+          }
+         
+          function getYahooChart(val){
+              qparam = val;
+              document.getElementById("stockgraph").innerHTML = "<img src='http://chart.finance.yahoo.com/t?s="+qparam+"&lang=en-US&width=550&height=300' width='98%'/>";
+          }     
+         
+         function newsdata(val) {
+             $.ajax({
+         url: "https://ajax.googleapis.com/ajax/services/search/news?v=1.0&q="+val+"&userip=cs-server.usc.edu",
+         type: "GET",			
+         dataType: "jsonp",
+                         data:{},
+                         success: function(data){
+         
+                         //console.log(data);
+                         printData(data);
+                     },
+                 error:function(){
+                 }
+         
+         });
+         }
+         function histocharts(val){
+             
+         $.ajax({
+         url: "http://webservice2016-env.us-west-2.elasticbeanstalk.com/",
+         type: "GET",
+         dataType: "json",
+                         data:{
+                             chartsymbol : '{"Normalized":false,"NumberOfDays":1095,"DataPeriod":"Day","Elements":[{"Symbol":"'+                    val+'","Type":"price","Params":["ohlc"]}]}'
+                         },
+                         success: function(data){
+                         console.log(data);
+         $.getJSON('https://www.highcharts.com/samples/data/jsonp.php?filename=aapl-c.json&callback=?', function (data) {
+         
+         // Create the chart
+         $('#container1').highcharts('StockChart', {
+         
+         
+            rangeSelector : {
+                inputEnabled:false,
+                selected : 0,
+                buttons:[
+                    {
+                        type:'week',
+                        count:1,
+                        text:'1w'
+                    },{
+         type: 'month',
+         count: 1,
+         text: '1m'
+         }, {
+         type: 'month',
+         count: 3,
+         text: '3m'
+         }, {
+         type: 'month',
+         count: 6,
+         text: '6m'
+         }, {
+         type: 'ytd',
+         text: 'YTD'    
+         }, {
+         type: 'year',
+         count: 1,
+         text: '1y'
+         }, {
+         type: 'all',
+         text: 'All'
+         }
+                ]
+            },
+         exporting: {
+         enabled: false
+},
+            title : {
+                text : val+' Stock Price'
+            },
+             yAxis: {
+                 title: 
+                 {
+                     text: 'Stock Value'
+                 }
+             },
+         
+            series : [{
+                name : val+' Stock Price',
+                data : data,
+                type : 'area',
+                threshold : null,
+                tooltip : {
+                    valueDecimals : 2,
+                    valuePrefix: '$'
+                },
+                fillColor : {
+                    linearGradient : {
+                        x1: 0,
+                        y1: 0,
+                        x2: 0,
+                        y2: 1
+                    },
+                    stops : [
+                        [0, Highcharts.getOptions().colors[0]],
+                        [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                    ]
+                }
+            }]
+         });
+         });
+                     },
+                             error:function(res){
+                 }
+         
+         
+         });
+         }
+          function changeImage() {
+              inputValue = document.getElementById("symid").innerText;
+              //console.log(inputValue, localStorage);
+              if(localStorage.getItem(inputValue) != null){
+                  //colour of star should be yellow initially and to be changed to empty
+                  //remove from locastorage
+                   //console.log("already there");
+                  document.getElementById("star").innerHTML = "<span class='glyphicon glyphicon-star-empty'  width='100' height='180' onclick='changeImage()'></span>";
+                  localStorage.removeItem(inputValue);
+                  removeFromFavTable(inputValue);
+                  //console.log(localStorage);
+         
+              }
+              else{
+                  //colour should be empty initially and should be changed to yellow
+                  //add in local storage
+                    document.getElementById("star").innerHTML = "<span class='glyphicon glyphicon-star'  width='100' height='180' onclick='changeImage()' style='color:yellow'></span>";
+                  localStorage.setItem(inputValue,storeArray);
+                  getFav(inputValue);
+                //console.log(localStorage);
+              }
+          }
+          function removeItem(btndel){
+            var symbol = $(btndel).closest('tr').children('td.symb').text();
+              
+            if (typeof(btndel) == "object") {
+            $(btndel).closest("tr").remove();
+            } else {
+                return false;
+            }
+            console.log(symbol);
+            localStorage.removeItem(symbol);
+         
+          }
+         
+          function removeFromFavTable(inputValue){
+            var index = 0;
+            var table = document.getElementById("favtable");
+            $('#favtable tr').filter(function(){
+               if($('td', this).eq(0).text() == inputValue){
+                   console.log(index);
+                   table.deleteRow(index)
+               }
+                index++;
+            });
+          }
+          
+          function clearItem2(){
+              var table = document.getElementById("t1");
+              if(table!=null){
+              var tableRows = table.getElementsByTagName('tr');
+              var rowCount = tableRows.length;
+
+            for (var x=rowCount-1; x>=0; x--) {
+               table.deleteRow(x);                
+          }
+              }
+                document.getElementById('stockgraph').innerHTML = "";
+                document.getElementById('container1').innerHTML = "";
+                document.getElementById("container2").innerHTML = "";
+          }
+              
+          
+          function Item2(obj1){
+              //console.log("second item "+obj1);
+              clearItem2();
+              newsdata(obj1);
+              histocharts(obj1);
+              //$(".item#it1").removeClass("active");
+              //$(".item#it2").addClass("active");
+              getStock(obj1);
+          }
+          
+          function getFav(inputval){
+              var table = document.getElementById("favtable");
+              var localStorageLen = localStorage.length;
+              var count = 0;
+              //console.log(localStorageLen);
+              for(var key in localStorage){
+                  var len = table.rows.length;
+                  if(count>=localStorageLen)
+                      break;
+                  //console.log("here -- "+localStorage.getItem(key), inputval);
+                  if(key == inputval){
+                        var row = table.insertRow(len);
+                        var cell1 = row.insertCell(0);
+                      cell1.innerHTML = "<a data-target='#myCarousel' data-slide-to='1' onclick=Item2('"+localStorage.getItem(key).split(",")[0]+"')>"+localStorage.getItem(key).split(",")[0] + "</a>";
+                      cell1.className = "symb";
+                        var cell2 = row.insertCell(1);
+                      cell2.innerHTML = localStorage.getItem(key).split(",")[1];
+                        var cell3 = row.insertCell(2);
+                      cell3.innerHTML = localStorage.getItem(key).split(",")[2];
+                        var cell4 = row.insertCell(3);
+                        if(localStorage.getItem(key).split(",")[3].match(/-/g)){
+                            
+                      cell4.innerHTML = localStorage.getItem(key).split(",")[3];
+                            cell4.style.color = "red";
+                            cell4.innerHTML += "<img src='down.png' id='img1'/>";
+                                        }
+                            else{
+                      cell4.innerHTML = localStorage.getItem(key).split(",")[3];
+                            cell4.style.color = "green";
+
+                                cell4.innerHTML += "<img src='up.png' id='img1'/>";
+                                                             }
+                        var cell5 = row.insertCell(4);
+                      cell5.innerHTML = localStorage.getItem(key).split(",")[4];
+                        var cell6 = row.insertCell(5);             
+                      cell6.innerHTML = "<button id='delButton'" +count+" onclick='removeItem(this);' class='btn btn-default'><span class='glyphicon glyphicon-trash'></span></button>"
+                  }
+                  count++;
+              }
+         
+          }
+          
+          function onLoadGetFav(){
+              var table = document.getElementById("favtable");
+              var localStorageLen = localStorage.length;
+              var count = 0;
+              //console.log(localStorageLen);
+              for(var key in localStorage){
+                  var len = table.rows.length;
+                  if(count>=localStorageLen)
+                      break;
+                  var row = table.insertRow(len);
+                  var cell1 = row.insertCell(0);
+                  cell1.innerHTML = "<a data-target='#myCarousel' data-slide-to='1' onclick=Item2('"+localStorage.getItem(key).split(",")[0]+"')>"+localStorage.getItem(key).split(",")[0] + "</a>";
+                  cell1.className = "symb";
+                    var cell2 = row.insertCell(1);
+                  cell2.innerHTML = localStorage.getItem(key).split(",")[1];
+                    var cell3 = row.insertCell(2);
+                  cell3.innerHTML = localStorage.getItem(key).split(",")[2];
+                    var cell4 = row.insertCell(3);
+                  if(localStorage.getItem(key).split(",")[3].match(/-/g)){
+                  cell4.innerHTML = localStorage.getItem(key).split(",")[3];
+                      
+                                                  cell4.style.color = "red";
+
+                            cell4.innerHTML += "<img src='down.png' id='img1'/>";
+                      
+                                        }
+                            else{
+                  cell4.innerHTML = localStorage.getItem(key).split(",")[3];
+
+                                cell4.style.color = "green";
+
+                                cell4.innerHTML += "<img src='up.png'  id='img1'/>";
+                                                             }
+                    var cell5 = row.insertCell(4);
+                  cell5.innerHTML = localStorage.getItem(key).split(",")[4];
+                    var cell6 = row.insertCell(5);             
+                  cell6.innerHTML = "<button id='delButton'" +count+" onclick='removeItem(this);' class='btn btn-default'><span class='glyphicon glyphicon-trash'></span></button>"
+                  count++;
+              }
+         
+          }
+          
+          
+         FB.init({
+    appId      : '574410046058748',
+    cookie     : true,  // enable cookies to allow the server to access 
+                        // the session
+    xfbml      : true,  // parse social plugins on this page
+    version    : 'v2.5' // use graph api version 2.5
+  });
+     function fbDialog(){
+         console.log("fbdialog");
+        $.ajax({
+         url: "http://webservice2016-env.us-west-2.elasticbeanstalk.com/",
+         type: "GET",			
+         dataType: "json",
+                         data:{
+                             symbol : document.getElementById('symid').innerText
+                         },
+                         success: function(data){
+                                 if (data['Status'] == 'SUCCESS') {
+        FB.ui({
+          method: 'feed',
+          link: 'http://dev.markitondemand.com/MODApis/',
+             name:'Current stock Price of '+data['Name']+' is $'+data['LastPrice'],
+             description:'Stock information of '+data['Name']+ ' ('+data['Symbol']+')',
+          caption: 'LAST TRADE PRICE: $'+data['LastPrice'] + ', CHANGE: '+(data['Change']).toFixed(2) + '(' + (data["ChangePercent"]).toFixed(2) + '%)',
+          picture:'http://chart.finance.yahoo.com/t?s='+document.getElementById("symid").innerText+'&width=300&height=300'
+}, 
+              function(response){
+             if(response){
+                 alert('Posted Successfully');
+             }else{
+                 alert('Not Posted');
+             }
+             
+         });
+                                 
+                                 }
+                     },
+                 error:function(err){
+                 }
+         
+         });
+         
+          
+       
+         
+     } 
+          
+    function clearAll(){
+        document.getElementById("error_1").innerHTML = "";
+        document.getElementById("usr").value = "";
+                     document.getElementById("rightbtn").disabled = true;
+             document.getElementById("rightbtnsm").disabled = true;
+
+/*                         var table = document.getElementById("favtable");
+                    var tableRows = table.getElementsByTagName('tr');
+                    var rowCount = tableRows.length;
+
+        for (var x=rowCount-1; x>0; x--) {
+           table.deleteRow(x);
+        }*/
+        
+    }      
+     function DisplayIP(response) {
+        console.log( "Your IP Address is " + response.ip);
+    }
+
+          window.onload = function () {
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = "http://jsonip.com/?callback=DisplayIP";
+        document.getElementsByTagName("head")[0].appendChild(script);
+    };
+         function activeStock(){
+                     $("#settings").removeClass("active");
+        $("#messages").removeClass("active");
+              $("#home").addClass("active");
+
+                     $("#tab2").removeClass("active");
+        $("#tab3").removeClass("active");
+              $("#tab1").addClass("active");
+        $("#tab22").removeClass("active");
+        $("#tab33").removeClass("active");
+              $("#tab11").addClass("active");
+
+         }
+           function activeFeed(){
+                       $("#home").removeClass("active");
+        $("#messages").removeClass("active");
+              $("#settings").addClass("active");
+
+                     $("#tab1").removeClass("active");
+        $("#tab2").removeClass("active");
+              $("#tab3").addClass("active");
+        $("#tab11").removeClass("active");
+        $("#tab22").removeClass("active");
+              $("#tab33").addClass("active");
+
+         }
+           function activeCharts(){
+                       $("#settings").removeClass("active");
+        $("#home").removeClass("active");
+              $("#messages").addClass("active");
+
+        $("#tab1").removeClass("active");
+        $("#tab3").removeClass("active");
+              $("#tab2").addClass("active");
+        $("#tab11").removeClass("active");
+        $("#tab33").removeClass("active");
+              $("#tab22").addClass("active");
+
+
+         }
+          
+      </script>
+              
+   </head>
+   <body style="background-color: #1B5271">
+
+<script>
+              var autocompleteData;
+
+  window.fbAsyncInit = function() {
+  FB.init({
+    appId      : '574410046058748',
+    cookie     : true,  // enable cookies to allow the server to access 
+                        // the session
+    xfbml      : true,  // parse social plugins on this page
+    version    : 'v2.5' // use graph api version 2.5
+  });
+
+  };
+
+  // Load the SDK asynchronously
+  (function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/sdk.js";
+    fjs.parentNode.insertBefore(js, fjs);
+  }(document, 'script', 'facebook-jssdk'));
+
+</script>
+      <div class="outer">
+         <div class="img-rounded inner" style="background-color:white;">
+             <div class="text-center"><b>Stock Market Search</b></div>
+            <div class="row">
+               <form name="stock" method="" onsubmit="event.preventDefault(); return test();">
+                  <div class="form-group">
+                     <div class="col-lg-3 col-sm-12 col-md-3 col-xs-12">
+                        <label for="usr" class="control-label">Enter the stock name or symbol:<span id="ast">*</span></label> 
+                     </div>
+                     <div class="col-lg-4 col-lg-offset-1 col-sm-12 col-xs-12 col-md-6">
+                        <input type="text" class="form-control" id="usr" placeholder="Apple Inc or APPL" required>
+                        <p id="error"></p>
+                     </div>
+                     <div class="col-xs-12 col-sm-12 col-md-3 col-lg-4">
+                        <button type="submit" class="btn btn-primary" id="sub"><span class="glyphicon glyphicon-search"></span>Get Quote</button>
+                        <button type="button" class="btn btn-default" data-target="#myCarousel" data-slide-to="0" onclick="clearAll()"><span class="glyphicon glyphicon-refresh"></span>
+                        Clear</button>
+                     </div>
+                  </div>
+               </form>
+            </div>
+            <div class="row">
+               <div style="color:red;" class="col-sm-12 col-xs-12 col-lg-offset-4 col-md-offset-5 col-lg-4 col-md-4" >
+                  <label id="error_1" name="error_1"/>
+               </div>
+               <div class="col-lg-4 col-sm-12 col-xs-12 col-md-3">
+               <label for="powerby">Powered By:
+               <a href="http://dev.markitondemand.com/MODApis/" target="_blank"><img src="http://cs-server.usc.edu:45678/hw/hw8/images/mod-logo.png" style="width:110px; height:20px" /></a>
+               </label>
+               </div>
+            </div>
+         </div>
+         <hr>
+         <div class="img-rounded inner" style="background-color:white;">
+            <div id="myCarousel" class="carousel img-rounded slide outertable">
+               <div class="carousel-inner" role="listbox">
+                  <div class="item active" id="it1">
+                     <div class="row upperrow" style="margin:5px;">
+                        <div class="hidden-sm hidden-xs col-md-2 col-lg-2" >
+                           <label style="color:#6C6C6C" id="favLabel"> Favorite List
+                           </label>
+                        </div>
+                         
+                        <div id="ar" class="text-right" style="margin-bottom:0px;">
+                           <span class="hidden-sm hidden-xs col-lg-offset-5 col-lg-2 col-md-offset-5 col-md-2 text-right col-lg-push-1 col-md-push-1" style="color:#6C6C6C"> Automatic Refresh:
+                           </span>
+                           <span class="hidden-sm hidden-xs col-lg-3 col-md-3" >
+                               <span data-toggle="tooltip" title="Refresh after every 5s">
+                           <input id="toggle-one" type="checkbox" data-toggle="toggle" onchange="refreshOnOff()" >
+                               </span>
+                           <button type="button" class="btn btn-default" onclick="repopulate();"><span class="glyphicon glyphicon-refresh" data-toggle="tooltip" title="Refresh"></span></button>
+                           <button class="btn btn-default active" id="rightbtn" data-target="#myCarousel" disabled data-slide-to="1" data-toggle="tooltip" title="See stock details">
+                           <span class="glyphicon glyphicon-chevron-right"></span>
+                           </button>
+                           </span>
+                        </div>
+                         <div class="hidden-lg hidden-md col-xs-5 col-sm-5" style="margin-top:10px" >
+                             <p style="color:#6C6C6C" id="favLabel"><b> Favorite List</b>
+                           </p>
+                        </div>
+                         <div id="ar1" class="text-right" style="margin-bottom:0px;">
+                             
+                           <div class="hidden-lg hidden-md col-sm-7 col-xs-7 text-right" style="padding-right:0px; padding-left:0px">
+                               <span data-toggle="tooltip" title="Refresh after every 5s">
+                           <input id="toggle-one1" type="checkbox" data-toggle="toggle" onchange="refreshOnOff()" >
+                               </span>
+                           <button type="button" class="btn btn-sm btn-default active" onclick="repopulate();"><span class="glyphicon glyphicon-refresh" data-toggle="tooltip" title="Refresh"></span></button>
+                           <button class="btn btn-sm btn-default active" id="rightbtnsm" data-target="#myCarousel" disabled data-slide-to="1" data-toggle="tooltip" title="See stock details">
+                           <span class="glyphicon glyphicon-chevron-right"></span>
+                           </button>
+                           </span>
+                      </div>
+                        </div>
+                         
+                     </div>
+                     <div id="divfavtable">
+                        <table id="favtable"  class="table1 table table-striped">
+                           <tr>
+                              <th>Symbol</th>
+                              <th>Company Name</th>
+                              <th>Stock Price</th>
+                              <th>Change(Change Percent)</th>
+                              <th>Market Cap</th>
+                              <th></th>
+                           </tr>
+                        </table>
+                     </div>
+                  </div>
+                  <div class="item" id="it2">
+                     <div class="row upperrow">
+                        <div class="col-sm-2 col-xs-2 col-lg-1 col-md-1" >
+                           <button class="btn btn-default active" data-target="#myCarousel" data-slide-to="0"  data-toggle="tooltip" title="See Favourite details"><span class="glyphicon glyphicon-chevron-left"></span>
+                           </button>
+                        </div>
+                        <div class="col-sm-10 col-xs-10 col-lg-11 col-md-11 text-center"  >
+                           <label style="color:#6C6C6C">Stock Details
+                           </label>
+                        </div>
+                     </div>
+                     <div style="margin:5px">
+                        <ul class="nav nav-pills" role="tablist">
+                           <li role="presentation" class="active hidden-sm hidden-xs" id="tab1">
+                               <a href="#home" onclick="activeStock()" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-dashboard"></span> Current Stock</a>
+                            </li>
+                            <li role="presentation" class="hidden-sm hidden-xs" id="tab2"><a href="#messages" onclick="activeCharts()" role="tab" data-toggle="tab" ><span class="glyphicon glyphicon-stats"></span> Historical Charts</a></li>
+                            <li role="presentation" class="hidden-sm hidden-xs" id="tab3"><a href="#settings" onclick="activeFeed()" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-link" ></span> News Feed</a></li>  
+                            <li role="presentation" class="active hidden-lg hidden-md" id="tab11"><a href="#home" onclick="activeStock()" role="tab" data-toggle="tab" ><span class="glyphicon glyphicon-dashboard"></span> Stock</a></li>
+                            
+                           <li role="presentation" class="hidden-lg hidden-md" id="tab22"><a href="#messages" onclick="activeCharts()" role="tab" data-toggle="tab" class="glyphicon glyphicon-stats"> Charts</a></li>
+                            <li role="presentation" class="hidden-lg hidden-md" id="tab33"><a href="#settings" onclick="activeFeed()" role="tab" data-toggle="tab" ><span class="glyphicon glyphicon-link" ></span>News</a></li>
+                            
+                        </ul>
+                         <hr>
+                        <div class="tab-content">
+                           <div role="tabpanel" class="tab-pane active" id="home">
+                              <div class="row">
+                                <div class="col-lg-2 col-md-2 col-sm-6 col-xs-6">
+                                    <span style="margin:15px"><b>Stock Details</b></span> 
+                                  </div>
+                                 <div class="col-lg-3 col-md-3 col-lg-offset-7 col-md-offset-7 col-sm-6 col-xs-6 text-right">
+                                     <span onclick="fbDialog()"><img  src="fbimage.png" class="img-rounded" onclick="" height="37px"/></span>
+                                 <button type="button" class="btn btn-default active" id="star">
+                                 <span class="glyphicon glyphicon-star-empty" onclick="changeImage()" width="100" height="150"></span>
+                                 </button>
+                                 </div>
+                              </div>
+                              <div class="row">
+                                 <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12" id="table1" >
+                                 </div>
+                                 <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12" id="stockgraph">
+                                 </div>
+                              </div>
+                           </div>
+                           <div role="tabpanel" class="tab-pane " id="messages">
+                              <div id="container1" style="height:auto; max-width:98%;min-width:90%"></div>
+                           </div>
+                           <div role="tabpanel" class="tab-pane" id="settings">
+                              <div id="container2" style="height:auto; width:100%">
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+       <script>onLoadGetFav();
+    
+    </script>
+   </body>
+</html>
